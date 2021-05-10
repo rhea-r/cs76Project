@@ -1,14 +1,22 @@
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 public class compression_and_decompression {
 	public static void main(String[] args) throws IOException {
+//	    Scanner input = new Scanner(System.in);
+//	    System.out.print("Enter a text: ");
+//	    String text = input.nextLine();
+//	    
 		File sourceFile = new File("sourceFile.txt");
 		if (!sourceFile.exists()) {
 			System.out.println("File 'sourceFile.txt' does not exist");
@@ -43,18 +51,17 @@ public class compression_and_decompression {
 	}
 
 	static class BitOutputStream {
-		private FileOutputStream output;
+		  private DataOutputStream output;
 		// programs statements
 		// converts bytes to bit
 		int bits; // buffer waits until it is full to write to file
 		int resetIndex; // resets when index == 8
 
 		// Constructor
-		public BitOutputStream(File file) throws IOException {
-			// one statement will do the job
+		  public BitOutputStream(File file) throws FileNotFoundException {
+			   output = new DataOutputStream(new FileOutputStream(file, true));
 
-			output = new FileOutputStream(file);
-		}
+			  }
 
 		public void writeBit(String bitString) throws IOException {
 			for (int i = 0; i < bitString.length(); i++)
