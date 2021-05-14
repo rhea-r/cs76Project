@@ -6,64 +6,239 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.NoSuchElementException;
 
 public class compression_and_decompression {
-	public static void main(String[] args) throws IOException {
-//	    Scanner input = new Scanner(System.in);
-//	    System.out.print("Enter a text: ");
-//	    String text = input.nextLine();
-//	    
+	/**
+	 * @param args
+	 * @throws IOException
+	 */
+	/**
+	 * @param args
+	 * @throws IOException
+	 */
+	/**
+	 * @param args
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
+//		@SuppressWarnings("resource")
+//		Scanner input = new Scanner(System.in);
+//		System.out.print("Enter a text: ");
+//		String text = input.nextLine();
+
 		File sourceFile = new File("sourceFile.txt");
 		if (!sourceFile.exists()) {
 			System.out.println("File 'sourceFile.txt' does not exist");
 			System.exit(2);
 		}
+		System.out.printf("%-15s%-15s%-15s%-15s\n", "ASCII Code", "Character", "Frequency", "Code");
 
-		  DataInputStream input = new DataInputStream(new BufferedInputStream(new FileInputStream(sourceFile)));
-		  int size = input.available();
-		  byte[] b = new byte[size];
-		  input.read(b);
-		  input.close();
-		  String text = new String(b);
-		  
+		DataInputStream input = new DataInputStream(new BufferedInputStream(new FileInputStream(sourceFile)));
+		int size = input.available();
+		byte[] b = new byte[size];
+		input.read(b);
+		input.close();
+		String text = new String(b);
 
 		int[] counts = getCharacterFrequency(text);
 		Tree tree = getHuffmanTree(counts);
 		String[] codes = getCode(tree.root);
+	   
+
+		for (int z = 0; z < codes.length; z++) {
+			if (counts[z] != 0) {
+				System.out.printf("%-15d%-15s%-15d%-15s\n", z, (char) z + "", counts[z], codes[z]);
+			} // (char)i is not in text if counts[i] is 0
+				
+		}
+
 		StringBuilder result = new StringBuilder();
 		for (int i = 0; i < text.length(); i++) {
 			result.append(codes[text.charAt(i)]);
 		}
-
-		ObjectOutputStream codesOutput = new ObjectOutputStream(new FileOutputStream("testingOut.dat"));
+	
+		
+		ObjectOutputStream codesOutput = new ObjectOutputStream(new FileOutputStream("objOut2.txt"));
 		codesOutput.writeObject(codes);
 		codesOutput.writeInt(result.length());
 		codesOutput.close();
+		
 
-		BitOutputStream output = new BitOutputStream(new File("testingOut.dat"));
+		
+		BitOutputStream output = new BitOutputStream(new File("objOut2.txt"));
 		output.writeBit(result.toString());
 		output.close();
+//		System.out.print(result);
+//		reading compressed file for decompression 
+//		System.out.println(result);
+		System.out.println();
+		System.out.println();
+
+		
+		
+		
+		//input is encoded file
+		ObjectInputStream codesinput = new ObjectInputStream(new FileInputStream("objOut2.txt"));
+	      System.out.println ("READ"+ codesinput.readObject());
+
+		codesinput.close();
+		FileInputStream input2 = new FileInputStream("objOut2.txt");
+		int size2 = input2.available();
+		byte[] b2 = new byte[size2];
+		input2.read(b2);
+
+		input2.close();
+		String text2 = new String(b2);
+
+		BitInputStream BinIn = new BitInputStream("objOut2.txt");
 
 	}
 
+
+	public static class BitInputStream {
+		private static final int EOF = -1; // end of file
+
+		private BufferedInputStream in; // the input stream
+		private int buffer; // one character buffer
+		private int n; // number of bits left in buffer
+
+		public BitInputStream(InputStream is) {
+			in = new BufferedInputStream(is);
+			fillBuffer();
+		}
+
+		public BitInputStream(String fileName) {
+
+			try {
+				// first try to read file from local file system
+				File file = new File(fileName);
+				if (file.exists()) {
+					FileInputStream fis = new FileInputStream(file);
+					in = new BufferedInputStream(fis);
+					fillBuffer();
+				}
+			} catch (IOException ioe) {
+				System.err.println("Could not open " + fileName);
+			}
+		}
+
+		public BitInputStream(File file) {
+
+			try {
+				if (file.exists()) {
+					FileInputStream fis = new FileInputStream(file);
+					in = new BufferedInputStream(fis);
+					fillBuffer();
+				}
+			} catch (IOException ioe) {
+				System.err.println("Could not open " + file.getName());
+			}
+		}
+
+		private void fillBuffer() {
+			try {
+				buffer = in.read();
+				n = 8;
+			} catch (IOException e) {
+				System.err.println("EOF");
+				buffer = EOF;
+				n = -1;
+			}
+		}
+
+		public boolean exists() {
+			return in != null;
+		}
+
+		public boolean isEmpty() {
+			return buffer == EOF;
+		}
+
+		public boolean readBoolean() {
+			if (isEmpty())
+				throw new NoSuchElementException("Reading from empty input stream");
+			n--;
+			boolean bit = ((buffer >> n) & 1) == 1;
+			if (n == 0)
+				fillBuffer();
+			return bit;
+		}
+
+		public char readChar() {
+			if (isEmpty())
+				throw new NoSuchElementException("Reading from empty input stream");
+
+			// special case when aligned byte
+			if (n == 8) {
+				int x = buffer;
+				fillBuffer();
+				return (char) (x & 0xff);
+			}
+
+			// combine last N bits of current buffer with first 8-N bits of new buffer
+			int x = buffer;
+			x <<= (8 - n);
+			int oldN = n;
+			fillBuffer();
+			if (isEmpty())
+				throw new NoSuchElementException("Reading from empty input stream");
+			n = oldN;
+			x |= (buffer >>> n);
+			return (char) (x & 0xff);
+			// the above code doesn't quite work for the last character if N = 8
+			// because buffer will be -1
+		}
+
+		public String readString() {
+			if (isEmpty())
+				throw new NoSuchElementException("Reading from empty input stream");
+
+			StringBuilder sb = new StringBuilder();
+			while (!isEmpty()) {
+				char c = readChar();
+				sb.append(c);
+			}
+			return sb.toString();
+		}
+
+		public int readInt() {
+			int x = 0;
+			for (int i = 0; i < 4; i++) {
+				char c = readChar();
+				x <<= 8;
+				x |= c;
+			}
+			return x;
+		}
+
+		public byte readByte() {
+			char c = readChar();
+			return (byte) (c & 0xff);
+		}
+	}
+
 	static class BitOutputStream {
-		  private DataOutputStream output;
+		private DataOutputStream output;
 		// programs statements
 		// converts bytes to bit
 		int bits; // buffer waits until it is full to write to file
 		int resetIndex; // resets when index == 8
 
 		// Constructor
-		  public BitOutputStream(File file) throws FileNotFoundException {
-			   output = new DataOutputStream(new FileOutputStream(file, true));
+		public BitOutputStream(File file) throws FileNotFoundException {
+			output = new DataOutputStream(new FileOutputStream(file, true));
 
-			  }
+		}
 
-		public void writeBit(String bitString) throws IOException {
-			for (int i = 0; i < bitString.length(); i++)
-				writeBit(bitString.charAt(i));
+		public void writeBit(String string) throws IOException {
+			for (int i = 0; i < string.length(); i++)
+				writeBit(string.charAt(i));
 		}
 
 		public void writeBit(char bit) throws IOException {
@@ -117,6 +292,7 @@ public class compression_and_decompression {
 		} else {
 			codes[(int) root.element] = root.code;
 		}
+
 	}
 
 	/** Get a Huffman tree from the codes */
@@ -135,6 +311,7 @@ public class compression_and_decompression {
 		}
 
 		return heap.remove(); // The final tree
+
 	}
 
 	/** Get the frequency of the characters */
@@ -174,21 +351,35 @@ public class compression_and_decompression {
 				return -1;
 		}
 
+		private Node overallRoot;
+		public static final int CHAR_MAX = 256;
+
 		public class Node {
+			Character ch;
 			char element; // Stores the character for a leaf node
 			int weight; // weight of the subtree rooted at this node
 			Node left; // Reference to the left subtree
 			Node right; // Reference to the right subtree
 			String code = ""; // The code of this node from the root
+			Integer freq;
+			public int letter;
 
 			/** Create an empty node */
 			public Node() {
+			}
+
+			Node(Character ch, Integer freq, int letter) {
+				this.ch = ch;
+				this.freq = freq;
+				this.letter = letter;
+
 			}
 
 			/** Create a node with the specified weight and character */
 			public Node(int weight, char element) {
 				this.weight = weight;
 				this.element = element;
+
 			}
 		}
 
