@@ -1,12 +1,16 @@
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 
 public class huffman_project {
@@ -46,7 +50,7 @@ public class huffman_project {
 		int[] counts = getCharacterFrequency(text);
 		Tree tree = getHuffmanTree(counts);
 		String[] codes = getCode(tree.root);
-	   
+
 
 		for (int z = 0; z < codes.length; z++) {
 			if (counts[z] != 0) {
@@ -54,6 +58,18 @@ public class huffman_project {
 			} // (char)i is not in text if counts[i] is 0
 				
 		}
+		
+		for (int z = 0; z < codes.length; z++) {
+			if (counts[z] != 0) {
+				System.out.println( z+" "+counts[z]);
+			} // (char)i is not in text if counts[i] is 0
+				
+		}
+
+		System.out.println();
+		System.out.println();
+		
+
 
 		StringBuilder result = new StringBuilder();
 		for (int i = 0; i < text.length(); i++) {
@@ -61,34 +77,65 @@ public class huffman_project {
 		}
 	
 		
-//		ObjectOutputStream codesOutput = new ObjectOutputStream(new FileOutputStream("objOut2.txt"));
-//		codesOutput.writeObject(codes);
-//		codesOutput.writeInt(result.length());
-//		codesOutput.close();
+		encode e = new encode();
+		e.codes= codes;
+		e.counts=counts;
+		ObjectOutputStream codesOutput = new ObjectOutputStream(new FileOutputStream("objOut2.txt"));
+		codesOutput.writeObject(e);
+//		codesOutput.writeObject(counts);
+		codesOutput.writeInt(result.length());
+		codesOutput.close();
 		
 
 		
-		BitOutputStream output = new BitOutputStream(new File("objOut2.txt"));
-		output.writeBit(result);
-
-
+//		BitOutputStream output = new BitOutputStream(new File("objOut2.txt"));
 //		output.writeBit(result);
-		output.close();
+//		output.close();
+		
+		
+		
 //		System.out.print(result);
 //		reading compressed file for decompression 
 //		System.out.println(result);
 		System.out.println();
 		System.out.println();
-		System.out.println(result);
+		System.out.println("Result: \n"+ result);
+		System.out.println();
+		System.out.println();
+		System.out.println("Result Length:"+ result.length());
 		System.out.println();
 		System.out.println();
 		
 
 		
 		//input is encoded file
-//		ObjectInputStream codesinput = new ObjectInputStream(new FileInputStream("objOut2.txt"));
-//	      System.out.println ("READ"+ codesinput.readObject());
-//		codesinput.close();
+		ObjectInputStream codesinput = new ObjectInputStream(new FileInputStream("objOut2.txt"));
+//	    System.out.println ("Result Length"+ resultLength);
+//		System.out.println("Read Object:"+ );
+        e = (encode) codesinput.readObject();
+		System.out.println("Counts:"+ e.counts[121]);
+		for (int z = 0; z < e.codes.length; z++) {
+			if (counts[z] != 0) {
+				System.out.print( z+" "+counts[z]+" ");
+			} // (char)i is not in text if counts[i] is 0
+				
+		}
+		System.out.println();
+
+	
+		while(true) {
+	         try {
+	     		int resultLength = codesinput.readInt();
+	     	    System.out.println ("Result Length"+ resultLength);
+	         } catch (EOFException e1) {
+	            System.out.println("");
+	            System.out.println("End of file reached");
+	            break;
+	         }
+	      }
+		
+		codesinput.close();
+
 //		FileInputStream input2 = new FileInputStream("objOut2.txt");
 //		int size2 = input2.available();
 //		byte[] b2 = new byte[size2];
@@ -101,10 +148,12 @@ public class huffman_project {
 		BitOutputStream output1 = new BitOutputStream(new File("out2.txt"));
 
 		//reads text to binary 
-		BitInputStream BinIn = new BitInputStream("objOut2.txt");
 		
+		
+		BitInputStream BinIn = new BitInputStream("objOut2.txt");
+		System.out.print( "Decoded:");
 		for (int i = 0; i < result.length(); i++) {
-			System.out.print(BinIn.readBits(1));
+			System.out.print( BinIn.readBits(1));
 		}
 		
 		   
@@ -112,6 +161,12 @@ public class huffman_project {
 
 	}
 
+	
+	public static class encode implements Serializable {  
+		String[] codes ;
+		int [] counts; 
+	   
+	}  
 	
 
 	public static class BitInputStream extends InputStream
