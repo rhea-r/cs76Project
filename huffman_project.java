@@ -12,7 +12,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
-public class compression_and_decompression {
+public class huffman_project {
 	/**
 	 * @param args
 	 * @throws IOException
