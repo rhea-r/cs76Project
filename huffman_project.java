@@ -7,10 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.NoSuchElementException;
+
 
 public class huffman_project {
 	/**
@@ -64,99 +61,208 @@ public class huffman_project {
 		}
 	
 		
-		ObjectOutputStream codesOutput = new ObjectOutputStream(new FileOutputStream("objOut2.txt"));
-		codesOutput.writeObject(codes);
-		codesOutput.writeInt(result.length());
-		codesOutput.close();
+//		ObjectOutputStream codesOutput = new ObjectOutputStream(new FileOutputStream("objOut2.txt"));
+//		codesOutput.writeObject(codes);
+//		codesOutput.writeInt(result.length());
+//		codesOutput.close();
 		
 
 		
 		BitOutputStream output = new BitOutputStream(new File("objOut2.txt"));
-		output.writeBit(result.toString());
+		output.writeBit(result);
+
+
+//		output.writeBit(result);
 		output.close();
 //		System.out.print(result);
 //		reading compressed file for decompression 
 //		System.out.println(result);
 		System.out.println();
 		System.out.println();
+		System.out.println(result);
+		System.out.println();
+		System.out.println();
+		
 
-		
-		
 		
 		//input is encoded file
-		ObjectInputStream codesinput = new ObjectInputStream(new FileInputStream("objOut2.txt"));
-	      System.out.println ("READ"+ codesinput.readObject());
+//		ObjectInputStream codesinput = new ObjectInputStream(new FileInputStream("objOut2.txt"));
+//	      System.out.println ("READ"+ codesinput.readObject());
+//		codesinput.close();
+//		FileInputStream input2 = new FileInputStream("objOut2.txt");
+//		int size2 = input2.available();
+//		byte[] b2 = new byte[size2];
+//		input2.read(b2);
+//		System.out.println(input2.read(b2));
 
-		codesinput.close();
-		FileInputStream input2 = new FileInputStream("objOut2.txt");
-		int size2 = input2.available();
-		byte[] b2 = new byte[size2];
-		input2.read(b2);
+//
+//		input2.close();
+//		String text2 = new String(b2);
+		BitOutputStream output1 = new BitOutputStream(new File("out2.txt"));
 
-		input2.close();
-		String text2 = new String(b2);
-
+		//reads text to binary 
 		BitInputStream BinIn = new BitInputStream("objOut2.txt");
-		System.out.println(BinIn.readBit());
+		
+		for (int i = 0; i < result.length(); i++) {
+			System.out.print(BinIn.readBits(1));
+		}
+		
+		   
 		BinIn.close();
+
 	}
 
+	
 
-	public static class BitInputStream {
-	    private FileInputStream input;
-	    private int digits;     // next set of digits (buffer)
-	    private int numDigits;  // how many digits from buffer have been used
+	public static class BitInputStream extends InputStream
+	{
+	    private InputStream     myInput;
+	    private int             myBitCount;
+	    private int             myBuffer;
+	    private File            myFile;
+	    
+	    private static final int bmask[] = {
+	        0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff,
+	        0x1ff,0x3ff,0x7ff,0xfff,0x1fff,0x3fff,0x7fff,0xffff,
+	        0x1ffff,0x3ffff,0x7ffff,0xfffff,0x1fffff,0x3fffff,
+	        0x7fffff,0xffffff,0x1ffffff,0x3ffffff,0x7ffffff,
+	        0xfffffff,0x1fffffff,0x3fffffff,0x7fffffff,0xffffffff
+	    };
 
-	    private static final int BYTE_SIZE = 8;  // digits per byte
-
-	    // pre : given file name is legal
-	    // post: creates a BitInputStream reading input from the file
-	    public BitInputStream(String file) {
+	    private static final int BITS_PER_BYTE = 8;
+	    /**
+	     * Construct a bit-at-a-time input stream from a file whose
+	     * name is supplied. 
+	     * @param filename is the name of the file that will be read.
+	     * @throws RuntimeException if filename cannot be opened.
+	     */
+	    public BitInputStream(String filename)
+	    {
+	        this(new File(filename));
+	    }
+	    
+	    /**
+	     * Construct a bit-at-a-time input stream from <code>file</code>.
+	     * @param file is the File that is the source of the input
+	     * @throws RuntimeExceptoin if file cannot be opened.
+	     */
+	    public BitInputStream(File file)
+	    {
+	        myFile = file;  
 	        try {
-	            input = new FileInputStream(file);
+	            reset();
 	        } catch (IOException e) {
-	            throw new RuntimeException(e.toString());
+	            throw new RuntimeException("could not open file for reading bits "+e);
 	        }
-	        nextByte();
+	        
+	    }
+	    
+	    /**
+	     * Open a bit-at-a-time stream that reads from supplied InputStream. If this
+	     * constructor is used the BitInputStream is not reset-able.
+	     * @param in is the stream from which bits are read.
+	     */
+	    public BitInputStream(InputStream in){
+	        myInput = in;
+	        myFile = null;
+	    }
+	    
+	    /**
+	     * Return true if the stream has been initialized from a File and
+	     * is thus reset-able. If constructed from an InputStream it is not reset-able.
+	     * @return true if stream can be reset (it has been constructed appropriately from a File).
+	     */
+	    public boolean markSupported(){
+	        return myFile != null;
 	    }
 
-	    // post: reads next bit from input (-1 if at end of file)
-	    public int readBit() {
-	        // if at eof, return -1
-	        if (digits == -1)
+	    /**
+	     * Reset stream to beginning. The implementation creates a new
+	     * stream.
+	     * @throws IOException if not reset-able (e.g., constructed from InputStream).
+	     */
+	    
+	    public void reset() throws IOException
+	    {
+	        if (! markSupported()){
+	            throw new IOException("not resettable");
+	        }
+	        try{
+	            close();
+	            myInput = new BufferedInputStream(new FileInputStream(myFile));
+	        }
+	        catch (FileNotFoundException fnf){
+	            System.err.println("error opening " + myFile.getName() + " " + fnf);
+	        }
+	        myBuffer = myBitCount = 0;
+	    } 
+
+	    /**
+	     * Closes the input stream.
+	     * @throws RuntimeException if the close fails
+	     */
+	    
+	    public void close()
+	    {
+	        try{
+	            if (myInput != null) {
+	                myInput.close();
+	            }
+	        }
+	        catch (java.io.IOException ioe){
+	           throw new RuntimeException("error closing bit stream " + ioe);
+	        }
+	    }
+
+	    /**
+	     * Returns the number of bits requested as rightmost bits in
+	     * returned value, returns -1 if not enough bits available to
+	     * satisfy the request.
+	     *
+	     * @param howManyBits is the number of bits to read and return
+	     * @return the value read, only rightmost <code>howManyBits</code>
+	     * are valid, returns -1 if not enough bits left
+	     */
+
+	    public int readBits(int howManyBits) throws IOException
+	    {
+	        int retval = 0;
+	        if (myInput == null){
 	            return -1;
-	        int result = digits % 2;
-	        digits /= 2;
-	        numDigits++;
-	        if (numDigits == BYTE_SIZE)
-	            nextByte();
-	        return result;
-	    }
-
-	    // post: refreshes the internal buffer with the next BYTE_SIZE bits
-	    private void nextByte() {
-	        try {
-	            digits = input.read();
-	        } catch (IOException e) {
-	            throw new RuntimeException(e.toString());
 	        }
-	        numDigits = 0;
-	    }
-
-	    // post: input is closed
-	    public void close() {
-	        try {
-	            input.close();
-	        } catch (IOException e) {
-	            throw new RuntimeException(e.toString());
+	        
+	        while (howManyBits > myBitCount){
+	            retval |= ( myBuffer << (howManyBits - myBitCount) );
+	            howManyBits -= myBitCount;
+	            try{
+	                if ( (myBuffer = myInput.read()) == -1) {
+	                    return -1;
+	                }
+	            }
+	            catch (IOException ioe) {
+	                throw new IOException("bitreading trouble "+ioe);
+	            }
+	            myBitCount = BITS_PER_BYTE;
 	        }
+
+	        if (howManyBits > 0){
+	            retval |= myBuffer >> (myBitCount - howManyBits);
+	            myBuffer &= bmask[myBitCount - howManyBits];
+	            myBitCount -= howManyBits;
+	        }
+	        return retval;
 	    }
 
-	    // included to ensure that the stream is closed
-	    protected void finalize() {
-	        close();
+	    /**
+	     * Required by classes extending InputStream, returns
+	     * the next byte from this stream as an int value.
+	     * @return the next byte from this stream
+	     */
+	    public int read() throws IOException {
+	        return readBits(8);
 	    }
 	}
+
 
 	static class BitOutputStream {
 		private DataOutputStream output;
@@ -171,9 +277,9 @@ public class huffman_project {
 
 		}
 
-		public void writeBit(String string) throws IOException {
-			for (int i = 0; i < string.length(); i++)
-				writeBit(string.charAt(i));
+		public void writeBit(StringBuilder result) throws IOException {
+			for (int i = 0; i < result.length(); i++)
+				writeBit(result.charAt(i));
 		}
 
 		public void writeBit(char bit) throws IOException {
