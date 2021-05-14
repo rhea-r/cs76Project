@@ -78,19 +78,19 @@ public class huffman_project {
 	
 		
 		encode e = new encode();
+		help h = new help();
+
 		e.codes= codes;
 		e.counts=counts;
+		h.result=result;
 		ObjectOutputStream codesOutput = new ObjectOutputStream(new FileOutputStream("objOut2.txt"));
 		codesOutput.writeObject(e);
-//		codesOutput.writeObject(counts);
-		codesOutput.writeInt(result.length());
+		codesOutput.writeInt(result.length());		
 		codesOutput.close();
-		
+		BitOutputStream output = new BitOutputStream(new File("objOut2.txt"));
+		output.writeBit(h);
+		output.close();
 
-		
-//		BitOutputStream output = new BitOutputStream(new File("objOut2.txt"));
-//		output.writeBit(result);
-//		output.close();
 		
 		
 		
@@ -113,26 +113,32 @@ public class huffman_project {
 //	    System.out.println ("Result Length"+ resultLength);
 //		System.out.println("Read Object:"+ );
         e = (encode) codesinput.readObject();
+
 		System.out.println("Counts:"+ e.counts[121]);
 		for (int z = 0; z < e.codes.length; z++) {
 			if (counts[z] != 0) {
-				System.out.print( z+" "+counts[z]+" ");
+				System.out.print( z+" "+counts[z]+"");
 			} // (char)i is not in text if counts[i] is 0
 				
 		}
 		System.out.println();
+		System.out.println();	
+		System.out.println("Results:"+ h.result);
+		System.out.println();
+		System.out.println();
+
 
 	
-		while(true) {
-	         try {
-	     		int resultLength = codesinput.readInt();
-	     	    System.out.println ("Result Length"+ resultLength);
-	         } catch (EOFException e1) {
-	            System.out.println("");
-	            System.out.println("End of file reached");
-	            break;
-	         }
-	      }
+//		while(true) {
+//	         try {
+//	     		int resultLength = codesinput.readInt();
+//	     	    System.out.println ("Result Length"+ resultLength);
+//	         } catch (EOFException e1) {
+//	            System.out.println("");
+//	            System.out.println("End of file reached");
+//	            break;
+//	         }
+//	      }
 		
 		codesinput.close();
 
@@ -149,23 +155,34 @@ public class huffman_project {
 
 		//reads text to binary 
 		
-		
-		BitInputStream BinIn = new BitInputStream("objOut2.txt");
-		System.out.print( "Decoded:");
-		for (int i = 0; i < result.length(); i++) {
-			System.out.print( BinIn.readBits(1));
-		}
-		
-		   
-		BinIn.close();
+		//doesn't need this part??
+//		BitInputStream BinIn = new BitInputStream("objOut2.txt");
+//		System.out.print( "Decoded:");
+//		for (int i = 0; i < result.length(); i++) {
+//			System.out.print( BinIn.readBits(1));
+//		}
+//		BinIn.close();
 
 	}
 
+	public static class help implements Serializable {  
+			StringBuilder result;
+
+			public int length() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+
+			public huffman_project.help charAt(int i) {
+				// TODO Auto-generated method stub
+				return null;
+			} 
+	}  
 	
 	public static class encode implements Serializable {  
+		public String result;
 		String[] codes ;
 		int [] counts; 
-	   
 	}  
 	
 
@@ -319,22 +336,21 @@ public class huffman_project {
 	}
 
 
-	static class BitOutputStream {
-		private DataOutputStream output;
+	static class BitOutputStream extends ObjectOutputStream  {
+		private ObjectOutputStream output;
 		// programs statements
 		// converts bytes to bit
 		int bits; // buffer waits until it is full to write to file
 		int resetIndex; // resets when index == 8
 
 		// Constructor
-		public BitOutputStream(File file) throws FileNotFoundException {
-			output = new DataOutputStream(new FileOutputStream(file, true));
-
+		public BitOutputStream(File file) throws IOException {
+			output = new ObjectOutputStream(new FileOutputStream(file, true));
 		}
 
-		public void writeBit(StringBuilder result) throws IOException {
-			for (int i = 0; i < result.length(); i++)
-				writeBit(result.charAt(i));
+		public void writeBit(huffman_project.help h) throws IOException {
+			for (int i = 0; i < h.length(); i++)
+				writeBit(h.charAt(i));
 		}
 
 		public void writeBit(char bit) throws IOException {
