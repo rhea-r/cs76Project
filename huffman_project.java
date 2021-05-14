@@ -78,11 +78,12 @@ public class huffman_project {
 	
 		
 		encode e = new encode();
-		help h = new help();
+		binOut h = new binOut();
 
 		e.codes= codes;
 		e.counts=counts;
 		h.result=result;
+		
 		ObjectOutputStream codesOutput = new ObjectOutputStream(new FileOutputStream("objOut2.txt"));
 		codesOutput.writeObject(e);
 		codesOutput.writeInt(result.length());		
@@ -91,12 +92,7 @@ public class huffman_project {
 		output.writeBit(h);
 		output.close();
 
-		
-		
-		
-//		System.out.print(result);
 //		reading compressed file for decompression 
-//		System.out.println(result);
 		System.out.println();
 		System.out.println();
 		System.out.println("Result: \n"+ result);
@@ -114,18 +110,21 @@ public class huffman_project {
 //		System.out.println("Read Object:"+ );
         e = (encode) codesinput.readObject();
 
-		System.out.println("Counts:"+ e.counts[121]);
+		System.out.println("Counts decoded from file:");
 		for (int z = 0; z < e.codes.length; z++) {
 			if (counts[z] != 0) {
-				System.out.print( z+" "+counts[z]+"");
+				System.out.print( z+" "+counts[z]+" ");
 			} // (char)i is not in text if counts[i] is 0
 				
 		}
 		System.out.println();
 		System.out.println();	
-		System.out.println("Results:"+ h.result);
+		System.out.println("Results decoded from file:"+ h.result);
 		System.out.println();
 		System.out.println();
+		
+		
+		codesinput.close();
 
 
 	
@@ -140,22 +139,10 @@ public class huffman_project {
 //	         }
 //	      }
 		
-		codesinput.close();
 
-//		FileInputStream input2 = new FileInputStream("objOut2.txt");
-//		int size2 = input2.available();
-//		byte[] b2 = new byte[size2];
-//		input2.read(b2);
-//		System.out.println(input2.read(b2));
-
-//
-//		input2.close();
-//		String text2 = new String(b2);
-		BitOutputStream output1 = new BitOutputStream(new File("out2.txt"));
 
 		//reads text to binary 
-		
-		//doesn't need this part??
+		//don't need this part??
 //		BitInputStream BinIn = new BitInputStream("objOut2.txt");
 //		System.out.print( "Decoded:");
 //		for (int i = 0; i < result.length(); i++) {
@@ -165,7 +152,7 @@ public class huffman_project {
 
 	}
 
-	public static class help implements Serializable {  
+	public static class binOut implements Serializable {  
 			StringBuilder result;
 
 			public int length() {
@@ -173,7 +160,7 @@ public class huffman_project {
 				return 0;
 			}
 
-			public huffman_project.help charAt(int i) {
+			public huffman_project.binOut charAt(int i) {
 				// TODO Auto-generated method stub
 				return null;
 			} 
@@ -186,6 +173,8 @@ public class huffman_project {
 	}  
 	
 
+	
+	//may not need this 
 	public static class BitInputStream extends InputStream
 	{
 	    private InputStream     myInput;
@@ -348,7 +337,7 @@ public class huffman_project {
 			output = new ObjectOutputStream(new FileOutputStream(file, true));
 		}
 
-		public void writeBit(huffman_project.help h) throws IOException {
+		public void writeBit(huffman_project.binOut h) throws IOException {
 			for (int i = 0; i < h.length(); i++)
 				writeBit(h.charAt(i));
 		}
