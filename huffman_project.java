@@ -59,12 +59,7 @@ public class huffman_project {
 				
 		}
 		
-		for (int z = 0; z < codes.length; z++) {
-			if (counts[z] != 0) {
-				System.out.println( z+" "+counts[z]);
-			} // (char)i is not in text if counts[i] is 0
-				
-		}
+
 
 		System.out.println();
 		System.out.println();
@@ -110,10 +105,11 @@ public class huffman_project {
 //		System.out.println("Read Object:"+ );
         e = (encode) codesinput.readObject();
 
-		System.out.println("Counts decoded from file:");
+		System.out.println("Ascii and Huffman codes decoded from file:");
 		for (int z = 0; z < e.codes.length; z++) {
 			if (counts[z] != 0) {
-				System.out.print( z+" "+counts[z]+" ");
+				System.out.print( "(ASCII:"+z+" "+"HuffmanCode:"+codes[z]+") ");
+
 			} // (char)i is not in text if counts[i] is 0
 				
 		}

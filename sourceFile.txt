@@ -1,1 +1,1 @@
-Apppplesauce
+Testing encoding and decoding with Huffman
