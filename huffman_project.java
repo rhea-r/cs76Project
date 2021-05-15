@@ -1,13 +1,32 @@
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/*
+ * Compression classes: 
+ ***writeBinaryString
+ ***readDataInpuStreamConvertToBytes
+ ***convertTextIntoArrayOfInteger
+ ***BitOutputStream
+ ***getCode
+ ***assignCode
+ ***getHuffmanTree
+ ***Tree
+ ***Heap
+ *
+ *
+ *Decompression classes:
+ ***readDataFromInputFile
+ ***getBinaryStringFromBytesValue
+
+ */
 
 	public class huffman_project{
 		@SuppressWarnings("unused")
 		public static void main(String[] args) {
 		
+			
+			//compression  
 			
 			String dataInBytes = readDataInpuStreamConvertToBytes(args);
 			
@@ -31,9 +50,10 @@ import java.util.Scanner;
 				outputBinary.close();
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
+			}  //end of compression in main
 			
 			
+			//decompression
 			if ("output2.txt" == "") {
 				System.out.println("The output target file is empty");
 				System.out.println("EXIT");
@@ -42,7 +62,7 @@ import java.util.Scanner;
 			}
 			
 			try {
-				FileInputStream inputFile2 = new FileInputStream("output.txt");
+				FileInputStream inputFile2 = new FileInputStream(args[1]);
 				String outputResult = readDataFromInputFile(inputFile2);
 				DataOutputStream output = new DataOutputStream(new FileOutputStream("output2.txt"));
 				output.write(outputResult.getBytes());
@@ -57,11 +77,13 @@ import java.util.Scanner;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			}//end of decompression in main
 
 
 		}
-
+		
+		
+		//compression methods
 		private static String writeBinaryString(String[] codes, String dataInBytes) {
 			StringBuilder result = new StringBuilder();
 			for (int i = 0; i < dataInBytes.length(); i++) {
@@ -72,70 +94,6 @@ import java.util.Scanner;
 			
 		}
 		
-		
-		private static String readDataFromInputFile(FileInputStream inputFile) throws IOException, ClassNotFoundException {
-
-
-			ObjectInputStream objectInput = new ObjectInputStream(inputFile);
-			// Read stored object write under Huffman Codes
-			String[] huffmanCodes = (String[]) (objectInput.readObject());
-
-			// Create a string builder to store to binary result
-			int sizeOfData = objectInput.readInt();
-			StringBuilder sb = new StringBuilder("");
-			int inputInt =0;
-			// Read inputFile bytes values
-			while ((inputInt = inputFile.read()) != -1) {
-				// Convert to binary and put it to String
-				sb.append(getBinaryStringFromBytesValue(inputInt));
-			}
-
-			inputFile.close();
-			sb.delete(sizeOfData, sb.length());
-
-			// When we still have to binary input
-			StringBuilder result = new StringBuilder();
-			while (sb.length() != 0) {
-				boolean status = false;	
-				for (int i = 0; i < huffmanCodes.length; i++) {
-					if ((huffmanCodes[i] != null) && (sb.indexOf(huffmanCodes[i]) == 0)) {
-						result.append((char)i);
-						sb.delete(0, huffmanCodes[i].length());
-						status = true;
-						break;
-					}
-				}
-				if (status = false) {
-					System.out.println("The data in the input file is not valid");
-					System.exit(2);
-				}
-
-			}
-
-			return result.toString();
-		}
-		// Convert Bytes to binary data
-		public static String getBinaryStringFromBytesValue(int binaryValue) {
-			// Get 256 bits for the value of the binary
-			binaryValue = binaryValue % 256;
-			//String value of a binary String
-			String binaryStringValue = "";
-			
-			int i = 0;
-			// signed right shift of the binaryValue
-			int sample = binaryValue >> i;
-			
-			for (int j = 0; j < 8; j++) {
-				// get the binary string value
-				binaryStringValue = (sample & 1) + binaryStringValue;
-				i++;
-				sample = binaryValue >> i;
-			}
-			return binaryStringValue;
-		}
-		
-
-
 		@SuppressWarnings("unused")
 		private static String readDataInpuStreamConvertToBytes(String [] args) {
 	
@@ -177,6 +135,8 @@ import java.util.Scanner;
 
 			return new String(inputBytes);
 		}
+		
+		
 
 		/*
 		 * Assign unique ASCII code number for each input characters Count the Frequency
@@ -195,7 +155,7 @@ import java.util.Scanner;
 			}
 			return integerArray;
 		}
-
+		
 		static class BitOutputStream {
 			private ArrayList<Integer> bits = new ArrayList<>();
 			private DataOutputStream output;
@@ -239,6 +199,8 @@ import java.util.Scanner;
 				return (byte) sum;
 			}
 		}
+		
+		
 
 		/*
 		 * From the textbook: Introduction to Java Programming, Ninth Edition
@@ -430,7 +392,75 @@ import java.util.Scanner;
 				return list.size();
 			}
 		}
+		
+		
+		
+		
+		
+		
+		//DECOMPRESSION CLASSES
+		
+		
+		// Convert Bytes to binary data
+		public static String getBinaryStringFromBytesValue(int binaryValue) {
+			// Get 256 bits for the value of the binary
+			binaryValue = binaryValue % 256;
+			//String value of a binary String
+			String binaryStringValue = "";
+			
+			int i = 0;
+			// signed right shift of the binaryValue
+			int sample = binaryValue >> i;
+			
+			for (int j = 0; j < 8; j++) {
+				// get the binary string value
+				binaryStringValue = (sample & 1) + binaryStringValue;
+				i++;
+				sample = binaryValue >> i;
+			}
+			return binaryStringValue;
+		}
+		
+		
+		private static String readDataFromInputFile(FileInputStream inputFile) throws IOException, ClassNotFoundException {
+
+
+			ObjectInputStream objectInput = new ObjectInputStream(inputFile);
+			// Read stored object write under Huffman Codes
+			String[] huffmanCodes = (String[]) (objectInput.readObject());
+
+			// Create a string builder to store to binary result
+			int sizeOfData = objectInput.readInt();
+			StringBuilder sb = new StringBuilder("");
+			int inputInt =0;
+			// Read inputFile bytes values
+			while ((inputInt = inputFile.read()) != -1) {
+				// Convert to binary and put it to String
+				sb.append(getBinaryStringFromBytesValue(inputInt));
+			}
+
+			inputFile.close();
+			sb.delete(sizeOfData, sb.length());
+
+			// When we still have to binary input
+			StringBuilder result = new StringBuilder();
+			while (sb.length() != 0) {
+				boolean status = false;	
+				for (int i = 0; i < huffmanCodes.length; i++) {
+					if ((huffmanCodes[i] != null) && (sb.indexOf(huffmanCodes[i]) == 0)) {
+						result.append((char)i);
+						sb.delete(0, huffmanCodes[i].length());
+						status = true;
+						break;
+					}
+				}
+				if (status = false) {
+					System.out.println("The data in the input file is not valid");
+					System.exit(2);
+				}
+
+			}
+
+			return result.toString();
+		}
 	}
-
-
-
